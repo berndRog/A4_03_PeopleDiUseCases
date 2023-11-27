@@ -179,7 +179,7 @@ class PeopleViewModel @Inject constructor(
          }
       }
       catch (e: Exception) {
-         val message = e.localizedMessage
+         val message = e.localizedMessage ?: e.stackTraceToString()
          logError(tag,message)
          _uiStateFlow.value =  UiState.Error(message)
       }
@@ -213,7 +213,7 @@ class PeopleViewModel @Inject constructor(
             }
          }
       } catch (e: Exception) {
-         val message = e.localizedMessage
+         val message = e.localizedMessage ?: e.stackTraceToString()
          logError(tag, message)
          _uiStateFlow.value = UiState.Error(message, false, true)
       }
@@ -236,7 +236,7 @@ class PeopleViewModel @Inject constructor(
             }
          }
       } catch (e: Exception) {
-         val message = e.localizedMessage
+         val message = e.localizedMessage ?: e.stackTraceToString()
          logError(tag,message)
          _uiStateFlow.value =  UiState.Error(message, false, true)
       }
@@ -265,7 +265,7 @@ class PeopleViewModel @Inject constructor(
             }
          }
       } catch (e: Exception) {
-         val message = e.localizedMessage
+         val message = e.localizedMessage ?: e.stackTraceToString()
          logError(tag,message)
          _uiStateFlow.value =  UiState.Error(message, false, true)
       }

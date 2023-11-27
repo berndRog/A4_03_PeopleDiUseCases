@@ -36,10 +36,7 @@ class ReadAll @Inject constructor(
          emit(UiState.Success(data = peopleDto.toDomain()))
       }
    }.catch {
-      var message = ""
-      it.localizedMessage.let { text ->
-         message = text
-      }
+      var message = it.localizedMessage ?: it.stackTraceToString()
       logError(tag, message)
       emit(UiState.Error(message = message))
    }.flowOn(_exceptionHandler + _dispatcher)

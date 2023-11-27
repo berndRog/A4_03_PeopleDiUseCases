@@ -51,7 +51,7 @@ class PeopleRepositoryImpl @Inject constructor(
          if(_peopleDto.firstOrNull { it.id == personDto.id } != null) {
             throw Exception("PersonDto with given id already exists")
          }
-         throw Exception("TestErrror add()")
+//       throw Exception("TestErrror add()")
          _mutex.withLock { _peopleDto.add(personDto) }
          return@withContext true
       }

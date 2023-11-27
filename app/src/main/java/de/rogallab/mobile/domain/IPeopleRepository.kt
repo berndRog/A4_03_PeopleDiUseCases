@@ -11,6 +11,6 @@ interface IPeopleRepository {
    suspend fun count(): Int
    suspend fun add(personDto: PersonDto): Boolean
    suspend fun addAll(peopleDto: List<PersonDto>): Boolean
-   suspend fun update(personDto: PersonDto): Boolean
+   suspend fun update(upPersonDto: PersonDto): Boolean
    suspend fun remove(personDto: PersonDto): Boolean
 }

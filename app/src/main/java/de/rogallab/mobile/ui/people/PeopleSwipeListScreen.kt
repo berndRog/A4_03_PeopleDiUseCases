@@ -2,14 +2,7 @@ package de.rogallab.mobile.ui.people
 
 import NavScreen
 import android.app.Activity
-import android.util.Log
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,11 +13,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DismissDirection
@@ -43,13 +33,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDismissState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -59,10 +46,10 @@ import de.rogallab.mobile.R
 import de.rogallab.mobile.domain.UiState
 import de.rogallab.mobile.domain.entities.Person
 import de.rogallab.mobile.domain.utilities.logDebug
-import de.rogallab.mobile.domain.utilities.logError
-import de.rogallab.mobile.domain.utilities.logInfo
-import showErrorMessage
-import java.util.UUID
+import de.rogallab.mobile.ui.people.composables.HandleUiStateError
+import de.rogallab.mobile.ui.people.composables.LogUiStates
+import de.rogallab.mobile.ui.people.composables.SetCardElevation
+import de.rogallab.mobile.ui.people.composables.SetSwipeBackground
 
 @OptIn(ExperimentalMaterial3Api::class)
 
@@ -73,35 +60,11 @@ fun PeopleSwipeListScreen(
 ) {
    val tag = "ok>PeopleListScreen   ."
 
-   val uiStateFlow: UiState<Person>
-      by viewModel.uiStateFlow.collectAsStateWithLifecycle()
+   val uiStateFlow: UiState<Person> by viewModel.uiStateFlow.collectAsStateWithLifecycle()
+   LogUiStates(uiStateFlow,"UiStateFlow", tag )
 
-   val uiStateListFlow: UiState<List<Person>>
-      by viewModel.uiStateListFlow.collectAsStateWithLifecycle()
-
-
-   val up = uiStateFlow.upHandler
-   val back =uiStateFlow.backHandler
-   if(uiStateFlow is UiState.Empty)
-      Log.v(tag,"Composition UiState.Empty $up $back")
-   else if(uiStateFlow is UiState.Loading)
-      Log.v(tag,"Composition UiState.Loading $up $back")
-   else if(uiStateFlow is UiState.Success)
-      Log.v(tag,"Composition UiState.Success $up $back")
-   else if(uiStateFlow is UiState.Error)
-      Log.v(tag,"Composition UiState.Error $up $back")
-
-   val upList = uiStateFlow.upHandler
-   val backList = uiStateFlow.backHandler
-
-   if(uiStateListFlow is UiState.Empty)
-      Log.v(tag,"Composition UiStateListFlow UiState.Empty $upList $backList")
-   else if(uiStateListFlow is UiState.Loading)
-      Log.v(tag,"Composition UiStateListFlow UiState.Loading $upList $backList")
-   else if(uiStateListFlow is UiState.Success)
-      Log.v(tag,"Composition UiStateListFlow UiState.Success $upList $backList")
-   else if(uiStateListFlow is UiState.Error)
-      Log.v(tag,"Composition UiStateListFlow UiState.Error $upList $backList")
+   val uiStateListFlow: UiState<List<Person>> by viewModel.uiStateListFlow.collectAsStateWithLifecycle()
+   LogUiStates(uiStateListFlow,"UiStateListFlow", tag )
 
    val snackbarHostState = remember { SnackbarHostState() }
 
@@ -205,75 +168,18 @@ fun PeopleSwipeListScreen(
                   modifier = Modifier.padding(vertical = 4.dp),
                   directions = setOf(DismissDirection.StartToEnd, DismissDirection.EndToStart),
                   background = {
-                     val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
-
-                     val colorBox by animateColorAsState(
-                        when (dismissState.targetValue) {
-                           DismissValue.Default -> Color.LightGray
-                           DismissValue.DismissedToEnd -> Color.Green
-                           DismissValue.DismissedToStart -> Color.Red
-                        },
-                        label = ""
-                     )
-                     val colorIcon: Color by animateColorAsState(
-                        when (dismissState.targetValue) {
-                           DismissValue.Default -> Color.Black
-                           DismissValue.DismissedToEnd -> Color.DarkGray
-                           DismissValue.DismissedToStart -> Color.DarkGray //Color.White
-                        },
-                        label = ""
-                     )
-                     val alignment = when (direction) {
-                        DismissDirection.StartToEnd -> Alignment.CenterStart
-                        DismissDirection.EndToStart -> Alignment.CenterEnd
-                     }
-                     val icon = when (direction) {
-                        DismissDirection.StartToEnd -> Icons.Default.Edit
-                        DismissDirection.EndToStart -> Icons.Default.Delete
-                     }
-                     val scale by animateFloatAsState(
-                        if (dismissState.targetValue == DismissValue.Default) 1.25f else 2.0f,
-                        label = ""
-                     )
-
-                     Box(
-                        Modifier
-                           .fillMaxSize()
-                           .background(colorBox)
-                           .padding(horizontal = 20.dp),
-                        contentAlignment = alignment
-                     ) {
-                        Icon(
-                           icon,
-                           contentDescription = "Localized description",
-                           modifier = Modifier.scale(scale),
-                           tint = colorIcon
-                        )
-                     }
+                     SetSwipeBackground(dismissState)
                   },
                   dismissContent = {
                      Column {
                         PersonListCard(
-                           id = person.id,
                            firstName = person.firstName,
                            lastName = person.lastName,
                            email = person.email,
                            phone = person.phone,
                            imagePath = person.imagePath ?: "",
-                           elevation = CardDefaults.cardElevation(
-                              defaultElevation = 4.dp,
-                              pressedElevation = if (dismissState.dismissDirection != null) 8.dp else 0.dp,
-                              focusedElevation = if (dismissState.dismissDirection != null) 8.dp else 0.dp,
-                              hoveredElevation = 0.dp,
-                              draggedElevation = if (dismissState.dismissDirection != null) 8.dp else 0.dp,
-                              disabledElevation = 0.dp
-                           )
-                        ) { id ->
-                           // LazyColum item clicked -> DetailScreen initialized
-                           logInfo(tag, "Forward Navigation: Item clicked")
-                           // Navigate to 'PersonDetail' destination and put 'PeopleList' on the back stack
-                           navController.navigate(route = NavScreen.PersonDetail.route + "/$id")
-                        }
+                           elevation = SetCardElevation(dismissState)
+                        )
                      }
                   }
                )
@@ -282,55 +188,44 @@ fun PeopleSwipeListScreen(
       }
    }
    if (uiStateListFlow is UiState.Error) {
-      LaunchedEffect(key1 = uiStateListFlow is UiState.Error)  {
-         val message = (uiStateListFlow as UiState.Error).message
-         logError(tag, "uiStateListFlow.Error $message")
-         showErrorMessage(
-            snackbarHostState = snackbarHostState,
-            errorMessage = message,
-            actionLabel = "Ok",
-            onErrorAction = { }
-         )
-      }
+      HandleUiStateError<List<Person>>(
+         uiStateFlow = uiStateListFlow,
+         actionLabel = "Ok",
+         onErrorAction = { },
+         navController = navController,
+         snackbarHostState = snackbarHostState,
+         onUiStateFlowChange = { },
+         tag = tag
+      )
    }
-
    if (uiStateFlow is UiState.Error) {
-      LaunchedEffect(key1 = uiStateFlow is UiState.Error) {
-         val message = (uiStateFlow as UiState.Error).message
-         logDebug(tag, "uiStateFlow.Error $message")
-         showErrorMessage(
-            snackbarHostState = snackbarHostState,
-            errorMessage = message,
-            actionLabel = "Ok",
-            onErrorAction = { }
-         )
-         viewModel.onUiStateFlowChange(UiState.Success(Person()))
-      }
+      HandleUiStateError(
+         uiStateFlow = uiStateFlow,
+         actionLabel = "Ok",
+         onErrorAction = { },
+         navController = navController,
+         snackbarHostState = snackbarHostState,
+         onUiStateFlowChange = { viewModel.onUiStateFlowChange(it) },
+         tag = tag
+      )
    }
 }
 
 @Composable
 fun PersonListCard(
-   id: UUID,
    firstName: String,
    lastName: String,
    email: String?,
    phone: String?,
    imagePath: String?,
-   elevation: CardElevation,
-   onClick: (UUID) -> Unit    // Event ↑  Person
+   elevation: CardElevation
 ) {
 //12345678901234567890123
    val tag = "ok>PersonListCard     ."
 
    Card(
-      modifier = Modifier
-         .fillMaxWidth()
-         .clickable {
-            logDebug(tag, "Row onClick()")
-            onClick(id)  // Event ↑
-         },
-      elevation = elevation,
+      modifier = Modifier.fillMaxWidth(),
+      elevation = elevation
    ) {
       Column(modifier = Modifier
          .padding(vertical = 4.dp)
