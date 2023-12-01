@@ -22,5 +22,10 @@ fun logDebug(tag: String, message: String) {
    if (isDebug) Log.d(tag, msg)
 }
 
+fun logVerbose(tag: String, message: String) {
+   Log.v(tag, message)
+}
+
+
 private fun formatMessage(message: String) =
    String.format("%-70s %s", message, Thread.currentThread().toString())
